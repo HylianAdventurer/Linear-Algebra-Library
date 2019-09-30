@@ -1,39 +1,26 @@
-import java.awt.*;
-import java.util.Vector;
+import java.awt.Rectangle;
 
 public class LinearAlgebra {
-    /* ***********
-        FUNCTIONS
-       *********** */
+    /* *************
+         FUNCTIONS
+       ************* */
 
     /* Mathematics */
     /**
-     * Returns the trace of a matrix
-     * @param m double[][]: Matrix to use
-     * @return double
-     * @throws NotSquareException Throws when the matrix is not square
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     */
-    public static double trace(double[][] m) {
-        if(!isSquare(m)) throw new NotSquareException(m, "Not Square Exception: Matrix must be square to find the trace");
-
-        double result = 0.0;
-        for(int i = 0; i < m.length; i++) result += m[i][i];
-        return result;
-    }
-
-    /**
      * Adds two matrices together
-     * @param m1 double[][]: First matrix to be added
-     * @param m2 double[][]: Second matrix to be added
+     * @param m1 double[][]: First matrix used for addition
+     * @param m2 double[][]: Second matrix used for addition
      * @return double[][]: Result matrix
-     * @throws MatrixSizeMismatchException Thrown if sizes of matrices do not match
+     * @throws MatrixSizeMismatchException Throws if sizes of matrices do not match
      * @throws InvalidMatrixException Throws when matrix is invalid
+     * @uses boolean validMatrix(double[][])
      */
     public static double[][] add(double[][] m1, double[][] m2) {
-        if(!getSize(m1).equals(getSize(m2))) throw new MatrixSizeMismatchException(m1,m2, "MatrixSizeMismatchException: Matrices must be the same size to add");
+        if(!validMatrix(m1)) throw new InvalidMatrixException(m1);
+        if(!validMatrix(m2)) throw new InvalidMatrixException(m2);
+        if(m1.length!=m2.length||m1[0].length!=m2[0].length) throw new MatrixSizeMismatchException(m1,m2, "MatrixSizeMismatchException: Matrices must be the same size to add");
 
-        double[][] result = newMatrix(getSize(m1));
+        double[][] result = new double[m1.length][m1[0].length];
 
         for(int i = 0; i < result.length; i++) {
             for(int j = 0; j < result[0].length; j++) {
@@ -50,7 +37,6 @@ public class LinearAlgebra {
      * @param v2 double[]: Second vector to be added
      * @return double[][]: Result vector
      * @throws VectorSizeMismatchException Thrown if sizes of vectors do not match
-     * @throws InvalidMatrixException Throws when matrix is invalid
      */
     public static double[] add(double[] v1, double[] v2) {
         if(v1.length!=v2.length) throw new VectorSizeMismatchException(v1,v2, "VectorSizeMismatchException: Vectors must be the same size to add");
@@ -63,21 +49,23 @@ public class LinearAlgebra {
     }
 
     /**
-     * Subtracts two matrices together
-     * @param m1 double[][]: First matrix to be subtracted
-     * @param m2 double[][]: Second matrix to be subtracted
-     * @return double[][]: Result matrix
-     * @throws MatrixSizeMismatchException Thrown if sizes of matrices do not match
+     * Returns the adjugate matrix of a matrix
+     * @param m double[][]: The matrix to find the adjugate matrix of
+     * @return double[][]: The adjugate matrix of the given matrix
      * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses boolean validMatrix(double[][])
+     * @uses double cofactor(double[][],int,int)
+     * @uses double determinant(double[][])
+     * @uses double[][] minor(double[][],int,int)
      */
-    public static double[][] subtract(double[][] m1, double[][] m2) {
-        if(!getSize(m1).equals(getSize(m2))) throw new MatrixSizeMismatchException(m1,m2, "MatrixSizeMismatchException: Matrices must be the same size to subtract");
-
-        double[][] result = newMatrix(getSize(m1));
+    public static double[][] adjugateMatrix(double[][] m) {
+        if(!validMatrix(m)) throw new InvalidMatrixException(m);
+        double[][] result = new double[m.length][m[0].length];
 
         for(int i = 0; i < result.length; i++) {
             for(int j = 0; j < result[0].length; j++) {
-                result[i][j] = m1[i][j] - m2[i][j];
+                result[j][i] = cofactor(m, i, j);
             }
         }
 
@@ -85,19 +73,137 @@ public class LinearAlgebra {
     }
 
     /**
-     * Subtracts two vectors together
-     * @param v1 double[]: First vector to be subtracted
-     * @param v2 double[]: Second vector to be subtracted
-     * @return double[][]: Result vector
-     * @throws VectorSizeMismatchException Thrown if sizes of vectors do not match
+     * Returns the cofactor of a matrix for some given row and column
+     * @param m double[][]: The matrix to find the cofactor of
+     * @param r int: The row number used to find the cofactor
+     * @param c int: The column number used to find the cofactor
+     * @return double: The cofactor of the matrix given row r and column c
      * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses boolean validMatrix(double[][])
+     * @uses double determinant(double[][])
+     * @uses double[][] minor(double[][],int,int)
      */
-    public static double[] subtract(double[] v1, double[] v2) {
-        if(v1.length!=v2.length) throw new VectorSizeMismatchException(v1,v2, "VectorSizeMismatchException: Vectors must be the same size to subtract");
+    public static double cofactor(double[][] m, int r, int c) {
+        return ((r + c) % 2 == 0 ? 1.0 : -1.0) * determinant(minor(m, r+1, c+1));
+    }
 
-        double[] result = new double[v1.length];
+    /**
+     * Returns the determinant of the given matrix
+     * @param m double[][]: The matrix to find the determinant of
+     * @return double: The determinant of the matrix
+     * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses boolean isSquare(double[][])
+     * @uses boolean validMatrix(double[][])
+     * @uses double[][] minor(double[][],int,int)
+     */
+    public static double determinant(double[][] m) {
+        if(!isSquare(m)) throw new NotSquareException(m);
+        if(m.length==1) return m[0][0];
+        if(m.length==2) return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+        double result = 0.0;
 
-        for(int i = 0; i < v1.length; i++) result[i] = v1[i] - v2[i];
+        for(int i = 0; i < m.length; i++) result += (i % 2 != 0 ? -1.0 : 1.0) * m[0][i] * determinant(minor(m,1,i + 1));
+
+        return result;
+    }
+
+    /**
+     * Returns the inverse matrix of the given matrix
+     * @param m double[][]: The matrix to find the inverse of
+     * @return double[][] OR null: The inverse of the given matrix unless no inverse matrix exists; singular
+     * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses boolean validMatrix(double[][])
+     * @uses boolean isSquare(double[][])
+     * @uses double determinant(double[][])
+     * @uses double[][] minor(double[][],int,int)
+     * @uses double cofactor(double[][],int,int)
+     */
+    public static double[][] inverse(double[][] m) {
+        double d = determinant(m);
+        if (d==0) return null;
+        double[][] result = new double[m.length][m[0].length];
+
+        for(int i = 0; i < result.length; i++) {
+            for(int j = 0; j < result[0].length; j++) {
+                result[j][i] = cofactor(m, i, j) / d;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the matrix of cofactors for a given matrix
+     * @param m double[][]: The matrix to find to matrix of cofactors of
+     * @return double[][]: The matrix of cofactors for the given matrix
+     * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses double cofactor(double[][])
+     * @uses double determinant(double[][])
+     * @uses double[][] minor(double[][],int,int)
+     * @uses boolean isSquare(double[][])
+     * @uses boolean validMatrix(double[][])
+     */
+    public static double[][] matrixOfCofactors(double[][] m) {
+        double[][] result = new double[m.length][m[0].length];
+
+        for(int i = 0; i < result.length; i++) {
+            for(int j = 0; j < result[0].length; j++) {
+                result[i][j] = cofactor(m, i, j);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the matrix of minors for the given matrix
+     * @param m double[][]: The matrix to find the matrix of minors of
+     * @return double[][]: The matrix of minors for the given matrix
+     * @throws InvalidMatrixException Throws when matrix is invalid
+     * @throws NotSquareException Throws when the matrix is not square
+     * @uses boolean validMatrix(double[][])
+     * @uses boolean isSquare(double[][])
+     * @uses double determinant(double[][])
+     * @uses double[][] minor(double[][],int,int)
+     */
+    public static double[][] matrixOfMinors(double[][] m) {
+        double[][] result = new double[m.length][m[0].length];
+
+        for(int i = 0; i < result.length; i++) {
+            for(int j = 0; j < result[0].length; j++) {
+                result[i][j] = determinant(minor(m, i+1, j+1));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the minor of the given matrix for the given row and column
+     * @param m double[][]: The matrix to take the minor of
+     * @param r int: The row to be removed. Must be 1 or greater
+     * @param c int: The column to be removed. Must be 1 or greater
+     * @return double[][]: The resulting matrix
+     * @throws ArrayIndexOutOfBoundsException Throws if the row or column numbers passed are outside of the bounds of the matrix
+     * @throws InvalidMatrixException Throws when matrix is invalid
+     * @uses boolean validMatrix(double[][])
+     */
+    public static double[][] minor(double[][] m, int r, int c) {
+        if(!validMatrix(m)) throw new InvalidMatrixException(m);
+        if(m.length < r || m[0].length < c || c < 1 || r < 1) throw new ArrayIndexOutOfBoundsException("ArrayIndexOutOfBoundsException: The row and/or column to be removed from matrix is outside of the bounds of the matrix\n" +
+                "Row: " + r + " Column: " + c + " Matrix size: " + m.length + "x" + m[0].length);
+
+        double[][] result = new double[m.length - 1][m[0].length - 1];
+
+        for(int i = 0; i < result.length; i++) {
+            for(int j = 0; j < result.length; j++) {
+                result[i][j] = m[i<r-1 ? i : i+1][j<c-1 ? j : j+1];
+            }
+        }
 
         return result;
     }
@@ -108,9 +214,11 @@ public class LinearAlgebra {
      * @param m double[][]: Matrix to be multiplied
      * @return double[][]: Result of multiplication
      * @throws InvalidMatrixException Throws when matrix is invalid
+     * @uses boolean validMatrix(double[][])
      */
     public static double[][] multiply(double k, double[][] m) {
-        double[][] result = newMatrix(getSize(m));
+        if(!validMatrix(m)) throw new InvalidMatrixException(m);
+        double[][] result = new double[m.length][m[0].length];
 
         for(int i = 0; i < result.length; i++) {
             for(int j = 0; j < result[0].length; j++) {
@@ -123,10 +231,9 @@ public class LinearAlgebra {
 
     /**
      * Multiplies a vector by a constant and returns the result
-     * @param k double: Constant matrix is multiplied by
+     * @param k double: Scalar matrix is multiplied by
      * @param v double[][]: Vector to be multiplied
      * @return double[]: Result of multiplication
-     * @throws InvalidMatrixException Throws when matrix is invalid
      */
     public static double[] multiply(double k, double[] v) {
         double[] result = new double[v.length];
@@ -141,10 +248,13 @@ public class LinearAlgebra {
      * @return double[][]: Resulting matrix
      * @throws InvalidMatrixException Throws when matrix is invalid
      * @throws MatrixSizeMismatchException Throws when m1 columns and m2 rows do not match
+     * @uses boolean validMatrix(double[][])
      */
     public static double[][] multiply(double[][] m1, double[][] m2) {
-        if(getWidth(m1) != getHeight(m2)) throw new MatrixSizeMismatchException(m1, m2, "MatrixSizeMismatchException: Number of columns in matrix 1 must be equal to number of rows in matrix 2");
-        double[][] result = newMatrix(m1.length,m2[0].length);
+        if(!validMatrix(m1)) throw new InvalidMatrixException(m1);
+        if(!validMatrix(m2)) throw new InvalidMatrixException(m2);
+        if(m1[0].length != m2.length) throw new MatrixSizeMismatchException(m1, m2, "MatrixSizeMismatchException: Number of columns in matrix 1 must be equal to number of rows in matrix 2");
+        double[][] result = new double[m1.length][m2[0].length];
 
         for(int i = 0; i < result.length; i++) {
             for(int j = 0; j < result[0].length; j++) {
@@ -162,57 +272,59 @@ public class LinearAlgebra {
     }
 
     /**
-     * Finds the determinant of the given matrix
-     * @param m double[][]: The matrix to find the determinant of
-     * @return double: The determinant of the matrix
+     * Subtracts two matrices together
+     * @param m1 double[][]: First matrix to be subtracted
+     * @param m2 double[][]: Second matrix to be subtracted
+     * @return double[][]: Result matrix
      * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
+     * @throws MatrixSizeMismatchException Thrown if sizes of matrices do not match
+     * @uses boolean validMatrix(double[][])
      */
-    public static double determinant(double[][] m) {
-        if(!isSquare(m)) throw new NotSquareException(m);
-        if(m.length==1) return m[0][0];
-        if(m.length==2) return m[0][0] * m[1][1] - m[0][1] * m[1][0];
-        double result = 0.0;
+    public static double[][] subtract(double[][] m1, double[][] m2) {
+        if(!validMatrix(m1)) throw new InvalidMatrixException(m1);
+        if(!validMatrix(m2)) throw new InvalidMatrixException(m2);
+        if(m1.length!=m2.length||m1[0].length!=m2[0].length) throw new MatrixSizeMismatchException(m1,m2, "MatrixSizeMismatchException: Matrices must be the same size to subtract");
 
-        for(int i = 0; i < m.length; i++) result += (i % 2 != 0 ? -1.0 : 1.0) * m[0][i] * determinant(minor(m,1,i + 1));
+        double[][] result = new double[m1.length][m1[0].length];
+
+        for(int i = 0; i < result.length; i++) {
+            for(int j = 0; j < result[0].length; j++) {
+                result[i][j] = m1[i][j] - m2[i][j];
+            }
+        }
 
         return result;
     }
 
     /**
-     * Returns the cofactor of a matrix for some given row and column
-     * @param m double[][]: The matrix to find the cofactor of
-     * @param r int: The row to find the cofactor
-     * @param c int: The column to find the cofactor
-     * @return double: The cofactor of the matrix
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
+     * Subtracts two vectors together
+     * @param v1 double[]: First vector to be subtracted
+     * @param v2 double[]: Second vector to be subtracted
+     * @return double[][]: Result vector
+     * @throws VectorSizeMismatchException Thrown if sizes of vectors do not match
      */
-    public static double cofactor(double[][] m, int r, int c) {
-        return ((r + c) % 2 == 0 ? 1.0 : -1.0) * determinant(minor(m, r+1, c+1));
+    public static double[] subtract(double[] v1, double[] v2) {
+        if(v1.length!=v2.length) throw new VectorSizeMismatchException(v1,v2, "VectorSizeMismatchException: Vectors must be the same size to subtract");
+
+        double[] result = new double[v1.length];
+
+        for(int i = 0; i < v1.length; i++) result[i] = v1[i] - v2[i];
+
+        return result;
     }
 
     /**
-     * Returns the minor of the given matrix for the given row and column
-     * @param m double[][]: The matrix to take the minor of
-     * @param r int: The row to be removed. Must be 1 or greater
-     * @param c int: The column to be removed. Must be 1 or greater
-     * @return double[][]: The resulting matrix
-     * @throws ArrayIndexOutOfBoundsException Throws if the row or column numbers passed are outside of the bounds of the matrix
+     * Returns the trace of a matrix
+     * @param m double[][]: Matrix to use
+     * @return double: The trace of the matrix
+     * @throws NotSquareException Throws when the matrix is not square
      * @throws InvalidMatrixException Throws when matrix is invalid
      */
-    public static double[][] minor(double[][] m, int r, int c) {
-        if(m.length < r || getWidth(m) < c || c < 1 || r < 1) throw new ArrayIndexOutOfBoundsException("ArrayIndexOutOfBoundsException: The row and/or column to be removed from matrix is outside of the bounds of the matrix\n" +
-                "Row: " + r + " Column: " + c + " Matrix size: " + m.length + "x" + m[0].length);
+    public static double trace(double[][] m) {
+        if(!isSquare(m)) throw new NotSquareException(m, "Not Square Exception: Matrix must be square to find the trace");
 
-        double[][] result = newMatrix(m.length - 1, m[0].length - 1);
-
-        for(int i = 0; i < result.length; i++) {
-            for(int j = 0; j < result.length; j++) {
-                result[i][j] = m[i<r-1 ? i : i+1][j<c-1 ? j : j+1];
-            }
-        }
-
+        double result = 0.0;
+        for(int i = 0; i < m.length; i++) result += m[i][i];
         return result;
     }
 
@@ -221,9 +333,11 @@ public class LinearAlgebra {
      * @param m double[][]: The matrix to find the transpose of
      * @return double[][]: The transposed matrix
      * @throws InvalidMatrixException Throws when matrix is invalid
+     * @uses boolean validMatrix(double[][])
      */
     public static double[][] transpose(double[][] m) {
-        double[][] result = newMatrix(getWidth(m), m.length);
+        if(!validMatrix(m)) throw new InvalidMatrixException(m);
+        double[][] result = new double[m[0].length][m.length];
 
         for(int i = 0 ; i < result.length; i++) {
             for(int j = 0; j < result[0].length; j++) {
@@ -232,68 +346,6 @@ public class LinearAlgebra {
         }
 
         return result;
-    }
-
-    /**
-     * Returns the matrix of cofactors for a given matrix
-     * @param m double[][]: The matrix to find to matrix of cofactors of
-     * @return double[][]: The matrix of cofactors
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
-     */
-    public static double[][] matrixOfCofactors(double[][] m) {
-        double[][] result = newMatrix(getSize(m));
-
-        for(int i = 0; i < result.length; i++) {
-            for(int j = 0; j < result[0].length; j++) {
-                result[i][j] = cofactor(m, i, j);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Returns the matrix of minors for the given matrix
-     * @param m double[][]: The matrix to find the matrix of minors of
-     * @return double[][]: The matrix of minors
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
-     */
-    public static double[][] matrixOfMinors(double[][] m) {
-        double[][] result = newMatrix(getSize(m));
-
-        for(int i = 0; i < result.length; i++) {
-            for(int j = 0; j < result[0].length; j++) {
-                result[i][j] = determinant(minor(m, i+1, j+1));
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Returns the adjoint of a matrix
-     * @param m double[][]: The matrix to find the adjoint of
-     * @return double[][]: The adjoint of the given matrix
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
-     */
-    public static double[][] adjoint(double[][] m) {
-        return transpose(matrixOfCofactors(m));
-    }
-
-    /**
-     * Returns the inverse matrix of the given matrix
-     * @param m double[][]: The matrix to find the inverse of
-     * @return double[][]: The inverse of the given matrix
-     * @return null: No inverse matrix exists; singular
-     * @throws InvalidMatrixException Throws when matrix is invalid
-     * @throws NotSquareException Throws when the matrix is not square
-     */
-    public static double[][] inverse(double[][] m) {
-        double d = determinant(m);
-        return d != 0 ? multiply(1 / d,adjoint(m)) : null;
     }
 
 
@@ -358,30 +410,11 @@ public class LinearAlgebra {
     }
 
     /**
-     * Returns a new matrix of specified size with all zeros
-     * @param height int: Height (number of rows) of new matrix
-     * @param width int: Width (number of columns) of new matrix
-     * @return double[][]: New Matrix
-     */
-    public static double[][] newMatrix(int height, int width) {
-        return new double[height][width];
-    }
-
-    /**
-     * Returns a new matrix of specified size with all zeros
-     * @param size Rectangle: Specifies size of new matrix
-     * @return double[][]: New matrix
-     */
-    public static double[][] newMatrix(Rectangle size) {
-        return new double[size.height][size.width];
-    }
-
-    /**
      * Returns an identity matrix of specified size
      * @param size int: size of new identity matrix
      * @return double[][]: New identity matrix
      */
-    public static double[][] newIdentity(int size) {
+    public static double[][] newIdentityMatrix(int size) {
         double[][] result = new double[size][size];
         for(int i = 0; i < size; i++) {
             result[i][i] = 1.0;

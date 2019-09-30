@@ -11,7 +11,7 @@
 .mtj.tmp/
 .iml
 /workspace.xml
-java/.idea
+java/.idea/
 java/src/Matrix.java
 java/src/Testing.java
 
