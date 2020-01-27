@@ -52,6 +52,7 @@ public class LinearAlgebra {
      * @throws NotSquareException Thrown when the matrix is not square
      * @uses double cofactor(double[][],int,int)
      * @uses double determinant(double[][])
+     * @uses boolean isSquare(double[][])
      * @uses double[][] minor(double[][],int,int)
      * @uses boolean validMatrix(double[][])
      */
@@ -75,6 +76,7 @@ public class LinearAlgebra {
      * @throws InvalidMatrixException Thrown when matrix is invalid
      * @throws NotSquareException Thrown when the matrix is not square
      * @uses double determinant(double[][])
+     * @uses boolean isSquare(double[][])
      * @uses double[][] minor(double[][],int,int)
      * @uses boolean validMatrix(double[][])
      */
@@ -88,8 +90,8 @@ public class LinearAlgebra {
      * @return double: The determinant of the matrix
      * @throws InvalidMatrixException Thrown when matrix is invalid
      * @throws NotSquareException Thrown when the matrix is not square
-     * @uses double[][] minor(double[][],int,int)
      * @uses boolean isSquare(double[][])
+     * @uses double[][] minor(double[][],int,int)
      * @uses boolean validMatrix(double[][])
      */
     public static double determinant(final double[][] matrix) {
@@ -107,8 +109,8 @@ public class LinearAlgebra {
      * Finds the dot product of two vectors
      * @param vector1 double[][]: First vector to find dot product of
      * @param vector2 double[][]: Second vector to find dot product of
-     * @return double: Dot product of two matrices
-     * @throws VectorSizeMismatchException Thrown when v1 and v2 are not the same size
+     * @return double: Dot product of two vectors
+     * @throws VectorSizeMismatchException Thrown when vector1 and vector2 are not the same size
      */
     public static double dotProduct(final double[] vector1, final double[] vector2) {
         if(vector1.length!=vector2.length) throw new VectorSizeMismatchException(vector1,vector2, "MatrixSizeMismatchException: Matrices must be the same size to find the dot product");
@@ -126,7 +128,7 @@ public class LinearAlgebra {
      * @param matrix2 double[][]: Second matrix to find dot product of
      * @return double: Dot product of two matrices
      * @throws InvalidMatrixException Thrown when matrix is invalid
-     * @throws MatrixSizeMismatchException Thrown when m1 columns and m2 rows do not match
+     * @throws MatrixSizeMismatchException Thrown when matrix1 columns and matrix2 rows do not match
      * @uses boolean validMatrix(double[][])
      */
     public static double dotProduct(final double[][] matrix1, final double[][] matrix2) {
@@ -697,9 +699,14 @@ public class LinearAlgebra {
      * Finds the roots of a given polynomial equation
      * @param equation double[]: Equation to find the roots of
      * @return double[]: Roots that were found
+     * @throws InvalidMatrixException Thrown when matrix is invalid
+     * @throws MatrixSizeMismatchException Thrown if sizes of matrices do not match
+     * @throws NotSquareException Thrown when the matrix is not square
+     * @uses boolean isSquare(double[][])
      * @uses double[] p_polynomialDerivative(double[])
      * @uses double p_polynomialValue(double[],double)
      * @uses double[] p_removeRoot(double[],double)
+     * @uses boolean validMatrix(double[][])
      */
     private static double[] p_findRoots(double[] equation) {
         if(equation.length < 2) return new double[] {};
